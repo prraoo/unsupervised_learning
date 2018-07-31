@@ -23,7 +23,7 @@ class Cluster():
 
     """
 
-    def __init__(self, K=None, X=None, N=10000, plot=True):
+    def __init__(self, K=None, X=None, N=100, plot=True):
         """Initialisation"""
         self.K = K
         if X is None:
@@ -45,17 +45,17 @@ class Cluster():
 
     def _create_blobs(self):
         X, y_true = make_blobs(n_samples=self.N, centers=self.K,
-                cluster_std=0.5,random_state=0)
+                cluster_std=0.8,random_state=0)
         #flip X for better plotting
         return X[:,::-1], y_true
 
     def kmeans_sklearn(self,x):
         kmeans = KMeans(self.K,random_state=0)
-        return kmeans,kmeans.fit(x).predict(x)
+        return kmeans, kmeans.fit(x).predict(x)
 
-
-    def plot_kmeans(kmeans,labels, X, n_clusters=self.K, rseed=0, ax=None):
+    def plot_kmeans(self, kmeans, labels, X, rseed=0, ax=None):
         # plot the input data
+        n_clusters=self.K
         ax = ax or plt.gca()
         ax.axis('equal')
         ax.scatter(X[:, 0], X[:, 1], c=labels, s=40, cmap='viridis', zorder=2)
@@ -66,8 +66,10 @@ class Cluster():
                              for i, center in enumerate(centers)]
         for c, r in zip(centers, radii):
             ax.add_patch(plt.Circle(c, r, fc='#CCCCCC', lw=3, alpha=0.5, zorder=1))
-        plt.show()
-
+        if self.plot:
+            plt.show()
+        else:
+            plt.savefig("KmeansPlot.png")
 
     def kde_sklearn(self,x, x_grid, bandwidth=0.2, **kwargs):
         """Kernel Density Estimation with Scikit-learn"""
@@ -84,20 +86,20 @@ class Cluster():
 
         ax.plot(x_grid, pdf, color='blue', alpha=0.5, lw=3)
         ax.fill(x_grid, pdf_true, ec='gray', fc='gray', alpha=0.4)
-        ax.set_title("GMM PLOT")
+        ax.set_title("Sklearn KDE Plot")
 
         if self.plot:
             plt.show()
         else:
-            plt.savefig("GMM_Plot{}_Points".format(self.N))
+            plt.savefig("GMM_Plot{}_Points.png".format(self.N))
 
     def gmm_sklearn(self,x):
         gmm = GMM(n_components=self.K).fit(x)
         labels = gmm.predict(x)
         probs = gmm.predict_proba(x)
-        return labels, probs
+        return gmm,labels, probs
 
-    def draw_ellipse(self,position, covariance, ax=None, **kwargs):
+    def draw_ellipse(self, position, covariance, ax=None, **kwargs):
         """Draw an ellipse with a given position and covariance"""
         ax = ax or plt.gca()
 
@@ -115,7 +117,7 @@ class Cluster():
             ax.add_patch(Ellipse(position, nsig * width, nsig * height,
                                  angle, **kwargs))
 
-    def plot_gmm(self,gmm, X, label=True, ax=None):
+    def plot_gmm(self,gmm, X,labels, label=True, ax=None):
         ax = ax or plt.gca()
         labels = gmm.fit(X).predict(X)
         if label:
@@ -125,24 +127,27 @@ class Cluster():
         ax.axis('equal')
 
         w_factor = 0.2 / gmm.weights_.max()
-        for pos, covar, w in zip(gmm.means_, gmm.covars_, gmm.weights_):
-            draw_ellipse(pos, covar, alpha=w * w_factor)
+        for pos, covar, w in zip(gmm.means_, gmm.covariances_, gmm.weights_):
+            self.draw_ellipse(pos, covar, alpha=w * w_factor)
+        ax.set_title("Sklearn Gaussian Mixture Plot")
+        plt.show()
 
 
 
 if __name__=="__main__":
-    cluster = Cluster(plot=False,K=4)
+    cluster = Cluster(plot=True,K=6)
     x_grid,X,pdf_true = cluster._init_gauss()
     x,_ = cluster._create_blobs()
     #kde
     pdf = cluster.kde_sklearn(X, x_grid)
-    cluster.plot_kde(x_grid,pdf,pdf_true)
+    #cluster.plot_kde(x_grid,pdf,pdf_true)
     #kmeans
     kmeans,kmeans_labels = cluster.kmeans_sklearn(x)
-    cluster.plot_kmeans(kmeans,kmeans_labels,x)
+    cluster.plot_kmeans(kmeans=kmeans,labels=kmeans_labels,X=x)
     #Gaussian Mixture
-    gmm_labels,gmm_prob = cluster.gmm_sklearn(x)
-    pdb.set_trace()
+    gmm, gmm_labels, gmm_prob = cluster.gmm_sklearn(x)
+    cluster.plot_gmm(gmm,x,gmm_labels)
+
 
 
 
