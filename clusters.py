@@ -51,10 +51,10 @@ class Cluster():
 
     def kmeans_sklearn(self,x):
         kmeans = KMeans(self.K,random_state=0)
-        return kmeans.fit(x).predict(x)
+        return kmeans,kmeans.fit(x).predict(x)
 
 
-    def plot_kmeans(kmeans,labels, X, n_clusters=4, rseed=0, ax=None):
+    def plot_kmeans(kmeans,labels, X, n_clusters=self.K, rseed=0, ax=None):
         # plot the input data
         ax = ax or plt.gca()
         ax.axis('equal')
@@ -66,6 +66,7 @@ class Cluster():
                              for i, center in enumerate(centers)]
         for c, r in zip(centers, radii):
             ax.add_patch(plt.Circle(c, r, fc='#CCCCCC', lw=3, alpha=0.5, zorder=1))
+        plt.show()
 
 
     def kde_sklearn(self,x, x_grid, bandwidth=0.2, **kwargs):
@@ -137,7 +138,8 @@ if __name__=="__main__":
     pdf = cluster.kde_sklearn(X, x_grid)
     cluster.plot_kde(x_grid,pdf,pdf_true)
     #kmeans
-    kmeans_labels = cluster.kmeans_sklearn(x)
+    kmeans,kmeans_labels = cluster.kmeans_sklearn(x)
+    cluster.plot_kmeans(kmeans,kmeans_labels,x)
     #Gaussian Mixture
     gmm_labels,gmm_prob = cluster.gmm_sklearn(x)
     pdb.set_trace()
