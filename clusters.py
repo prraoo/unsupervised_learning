@@ -10,6 +10,8 @@ from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
 from matplotlib.patches import Ellipse
 from sklearn.mixture import GaussianMixture as GMM
+
+from PIL import Image
 class Cluster():
 
     """
@@ -138,15 +140,19 @@ if __name__=="__main__":
     cluster = Cluster(plot=True,K=6)
     x_grid,X,pdf_true = cluster._init_gauss()
     x,_ = cluster._create_blobs()
+    pdb.set_trace()
+    image = Image.open("./imgs/person.jpg")
+    print(x)
+    pdb.set_trace()
     #kde
     pdf = cluster.kde_sklearn(X, x_grid)
     #cluster.plot_kde(x_grid,pdf,pdf_true)
     #kmeans
-    kmeans,kmeans_labels = cluster.kmeans_sklearn(x)
-    cluster.plot_kmeans(kmeans=kmeans,labels=kmeans_labels,X=x)
+    kmeans,kmeans_labels = cluster.kmeans_sklearn(np.array(image))
+    #cluster.plot_kmeans(kmeans=kmeans,labels=kmeans_labels,X=x)
     #Gaussian Mixture
     gmm, gmm_labels, gmm_prob = cluster.gmm_sklearn(x)
-    cluster.plot_gmm(gmm,x,gmm_labels)
+    #cluster.plot_gmm(gmm,x,gmm_labels)
 
 
 
